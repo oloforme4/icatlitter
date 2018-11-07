@@ -40,6 +40,11 @@
       // Once a connection has been made, make a subscription and send a message.
       console.log("onConnect");
       client.subscribe("/server");
+      client.subscribe("/icatbox");
+      client.subscribe("/statusmsg");
+
+
+
       message = new Paho.MQTT.Message("off");
       message.destinationName = "/server";
       client.send(message);
@@ -57,7 +62,26 @@
     }
     // called when a message arrives
     function onMessageArrived(message) {
-      console.log("onMessageArrived:" + message.payloadString);
+      console.log("onMessageArrived:" + message.destinationName + ' ' + message.payloadString);
+
+    // Online offline command
+      if (message.destinationName == "/statusmsg") {
+        var status = message.payloadString;
+        console.log(status);
+        if (status == 'Online') {
+          document.getElementById("statusCheck").innerHTML = "Online";
+          document.getElementById("statusCheck").style.color = "#8bc34a";
+        } else if (status !== 'Online') {
+          document.getElementById("statusCheck").innerHTML = "Offline";
+          document.getElementById("statusCheck").style.color = "#f44336";
+        }
+      }
+    }
+
+    function send(msg) {
+      message = new Paho.MQTT.Message(msg);
+      message.destinationName = "/server";
+      client.send(message);
     }
     function power_on() {
       send("power on");
@@ -83,13 +107,15 @@
     function notice_off() {
       send("notice off")
     }
-    function send(msg) {
-      message = new Paho.MQTT.Message(msg);
-      message.destinationName = "/server";
-      client.send(message);
+    function cleanner_on() {
+      send("clean the box");
     }
 
   </script>
+
+
+
+
   <!-- function check switch -->
   <script>
     function powerFunction() {
@@ -192,6 +218,12 @@
               <span class="slider"></span>
             </label>
           </li>
+          <li class="list-group-item">
+            Clean the box
+            <label class="switch">
+              <button type="button" class="btn btn-secondary" onclick="cleanner_on()">Clean</button>
+            </label>
+          </li>
           </ul>
         </div>
       </div>
@@ -200,8 +232,8 @@
           <div class="card-header">Status bar</div>
           <li class="list-group-item">
             Catliiter Box
-            <label class="statusbargreen">
-              online
+            <label class="statusbarred">
+              <p id="statusCheck">Offline</p>
             </label>
           </li>
           <li class="list-group-item">
